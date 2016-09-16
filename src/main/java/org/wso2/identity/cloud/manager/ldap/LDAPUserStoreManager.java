@@ -23,8 +23,8 @@ import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.common.objects.*;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
-import org.json.simple.JSONObject;
 import org.wso2.identity.cloud.connector.LDAPConnector;
+import org.wso2.identity.cloud.constants.LDAPConstants;
 import org.wso2.identity.cloud.manager.UserStoreManager;
 import org.wso2.identity.cloud.object.AttributeList;
 import org.wso2.identity.cloud.object.Credentials;
@@ -52,7 +52,7 @@ public class LDAPUserStoreManager implements UserStoreManager{
     public Map<String,Object> getUserAttributes(String username, AttributeList attributeList) throws IOException {
         Map<String,Object> userAttributes = new FastHashMap();
         connection = LDAPConnector.getConnector().getConnection();
-        Filter userNameFilter = FilterBuilder.equalTo(new Name("uid="+username+",ou=system"));
+        Filter userNameFilter = FilterBuilder.equalTo(new Name(LDAPConstants.UID+"="+username+","+ LDAPConstants.UserStoreProperties.SEARCH_BASE));
 
         ResultsHandler handler = new ResultsHandler() {
             public boolean handle(ConnectorObject obj) {
@@ -65,13 +65,12 @@ public class LDAPUserStoreManager implements UserStoreManager{
 
         if(connectorObject != null){
             Attribute attribute;
-            userAttributes.put("username",username);
+            userAttributes.put(LDAPConstants.USER_NAME,username);
             for (String attributeName : attributeList.getAttributes()) {
                 attribute = connectorObject.getAttributeByName(attributeName);
                 if(attribute!=null){
                     userAttributes.put(attribute.getName(),attribute.getValue());
                 }
-
             }
         }
         return userAttributes;
@@ -83,7 +82,7 @@ public class LDAPUserStoreManager implements UserStoreManager{
         ResultsHandler handler = new ResultsHandler() {
             public boolean handle(ConnectorObject obj) {
                 User user = new User();
-                user.setUsername(obj.getAttributeByName("uid").getValue().toArray()[0].toString());
+                user.setUsername(obj.getAttributeByName(LDAPConstants.UID).getValue().toArray()[0].toString());
                 users.add(user);
                 return true;
             }
